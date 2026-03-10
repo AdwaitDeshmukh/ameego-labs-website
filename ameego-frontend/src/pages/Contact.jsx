@@ -1,7 +1,7 @@
  function Contact(){
     return(
         <div>
-            contact section
+            contact component
         </div>
     );
  }
