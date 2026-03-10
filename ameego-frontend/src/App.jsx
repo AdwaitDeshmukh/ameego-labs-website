@@ -6,7 +6,8 @@ import About from './pages/About'
 import Services from './pages/Services'
 import Products from './pages/Products'
 import Portfolio from './pages/Portfolio'
-import Contact from './pages/Contact'
+import ContactSection from './components/Contact'
+
 
 function App() {
   return (
@@ -18,8 +19,8 @@ function App() {
         <Route path="/services" element={<Services />} />
         <Route path="/products" element={<Products />} />
         <Route path="/portfolio" element={<Portfolio />} />
-        <Route path="/contact" element={<Contact />} />
       </Routes>
+      <ContactSection />
       <Footer />
     </BrowserRouter>
   )
