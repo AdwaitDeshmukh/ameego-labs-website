@@ -13,7 +13,12 @@ function Navbar() {
          <div className="flex gap-6 text-white ">
             <Link className={LinkClass} to="/">Home</Link>
             <Link className={LinkClass} to="/about">About</Link>
-            <Link className={LinkClass} to="/services">Services</Link>
+            <span
+               className={LinkClass}
+               onClick={() => document.getElementById('serviceStart').scrollIntoView({ behavior: 'smooth' })}
+            >
+               Services
+            </span>
             <Link className={LinkClass} to="/products">Products</Link>
             <Link className={LinkClass} to="/portfolio">Portfolio</Link>
             <span

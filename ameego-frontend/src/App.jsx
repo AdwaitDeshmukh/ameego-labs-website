@@ -12,7 +12,6 @@ import ContactSection from './components/Contact'
 function App() {
   return (
     <BrowserRouter>
-      <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
@@ -20,7 +19,6 @@ function App() {
         <Route path="/products" element={<Products />} />
         <Route path="/portfolio" element={<Portfolio />} />
       </Routes>
-      <ContactSection />
       <Footer />
     </BrowserRouter>
   )
