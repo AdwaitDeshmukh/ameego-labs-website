@@ -297,7 +297,7 @@ export default function ContactSection() {
                                         />
                                     }
                                     label="Email"
-                                    value="hello@ameegolabs.com"
+                                    value="info@ameegolabs.com"
                                 />
                             </motion.div>
 
@@ -312,7 +312,7 @@ export default function ContactSection() {
                                         />
                                     }
                                     label="Phone"
-                                    value="+91 00000 00000"
+                                    value="+91 70079 01057"
                                 />
                             </motion.div>
 

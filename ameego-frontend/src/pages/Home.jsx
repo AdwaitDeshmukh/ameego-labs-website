@@ -5,17 +5,16 @@ function Home() {
     initial: { y: 30, opacity: 0 },
     animate: { y: 0, opacity: 1 },
   };
-//we can change the stats later on
+  //we can change the stats later on
   const stats = [
-  { number: '50+', label: 'Projects Delivered' },
-  { number: '6', label: 'Products Built' },
-  {   number:"12+",label:'Happy Clients'},
-]
+    { number: '50+', label: 'Projects Delivered' },
+    { number: '6', label: 'Products Built' },
+    { number: "12+", label: 'Happy Clients' },
+  ]
   return (
     <section className="bg-gray-50 min-h-screen flex flex-col  justify-center items-center relative overflow-hidden">
-      <div   className="relative z-10 flex flex-col items-center text-center ">
+      <div className="relative z-10 flex flex-col items-center text-center ">
         <motion.div  {...fadeUp} transition={{ duration: 0.7, delay: 0.1 }} className='inline-flex items-center gap-2 border rounded-full px-4 py-1'>
-          <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
           <span className='font-bold'>Awarded by PM of India · Digital India Initiative</span>
         </motion.div>
         <motion.div {...fadeUp} transition={{ duration: 0.7, delay: 0.3 }} className="text-5xl font-bold text-slate-900 relative">
@@ -31,11 +30,11 @@ function Home() {
         </motion.div>
         <motion.div {...fadeUp} transition={{ duration: 0.7, delay: 0.9 }} className=' mt-16 flex gap-12'>
           {stats.map((stat, index) => (
-  <div key={index} >
-    <div className='text-3xl font-bold'> {stat.number} </div>
-    <div className='text-sm text-slate-500 mt-1'> {stat.label} </div>
-  </div>
-))}
+            <div key={index} >
+              <div className='text-3xl font-bold'> {stat.number} </div>
+              <div className='text-sm text-slate-500 mt-1'> {stat.label} </div>
+            </div>
+          ))}
         </motion.div>
       </div>
     </section>
