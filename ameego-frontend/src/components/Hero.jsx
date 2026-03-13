@@ -164,7 +164,7 @@ export default function HeroSection() {
                     </div>
 
                     {/* Headline line 2 — cycling word */}
-                    <div className="overflow-hidden mb-8">
+                    <div className="mb-8">
                         <motion.div
                             className="f-display text-[clamp(2.8rem,8vw,5.5rem)] font-black leading-none tracking-tight"
                             initial={{ y: "110%" }}
@@ -173,7 +173,7 @@ export default function HeroSection() {
                         >
                             <span
                                 className="relative inline-block"
-                                style={{ minWidth: "clamp(160px, 28vw, 340px)", height: "1.05em", verticalAlign: "bottom" }}
+                                style={{ minWidth: "clamp(200px, 35vw, 450px)", height: "1.05em", verticalAlign: "bottom" }}
                             >
                                 <CyclingWord />
                             </span>
