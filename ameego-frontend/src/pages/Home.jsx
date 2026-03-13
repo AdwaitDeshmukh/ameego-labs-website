@@ -4,6 +4,9 @@ import ScrollToTop from '../components/ScrollToTop';
 import HeroSection from '../components/Hero';
 import Navbar from '../components/Navbar';
 import ServicesSection from '../components/Services';
+import ProductsSection from '../components/Products';
+import AboutSection from '../components/About'
+
 
 function Home() {
   const fadeUp = {
@@ -49,7 +52,9 @@ function Home() {
       </section> */}
       <div id='serviceStart'></div>
       <ServicesSection />
+      <ProductsSection />
       <ContactSection />
+      <AboutSection />
       <ScrollToTop />
     </>
   );
