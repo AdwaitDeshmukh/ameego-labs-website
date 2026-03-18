@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
-import awardImage from '../images/award1.jpg'; 
-import CEOimage from '../images/1679996862114.jpg'; 
+import awardImage from '../images/award1.jpg';
+import CEOimage from '../images/1679996862114.jpg';
 
 // ─── Animation Variants ──────────────────────────────────────────
 const fadeUp = {
@@ -29,10 +29,10 @@ const SKILLS = [
 
 export default function AboutSection() {
   return (
-    <section className="bg-[#F9FAFB] font-sans">
+    <section className="bg-white font-sans">
 
       {/* ── Hero Banner ── */}
-      <div className="bg-white border-b border-gray-100 py-24 px-6 text-center">
+      <div className="border-b border-gray-100 py-24 px-6 text-center">
         <motion.div
           variants={fadeUp} initial="hidden" animate="visible" custom={0}
           className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 text-blue-500 text-xs font-semibold px-4 py-1.5 rounded-full mb-6 tracking-wide"
@@ -59,9 +59,9 @@ export default function AboutSection() {
       </div>
 
       {/* ── CEO Section ── */}
-      <div className="max-w-5xl mx-auto px-6 py-20">
+      <div className="max-w-5xl mx-auto px-6 pt-10 pb-20">
         <motion.div
-          className="bg-white rounded-2xl border border-gray-100 shadow-sm p-10"
+          className="bg-gray-50 rounded-2xl border border-gray-100 p-10"
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -70,14 +70,14 @@ export default function AboutSection() {
           <div className="grid md:grid-cols-2 gap-10 items-center">
 
             {/* CEO Image */}
-<div className="rounded-2xl overflow-hidden h-72">
-  <img
-    src={CEOimage}
-    alt="Zakaul Haque - CEO"
-    className="w-full h-full object-cover"
-    style={{ objectPosition: 'center 20%' }}
-  />
-</div>
+            <div className="rounded-2xl overflow-hidden h-72">
+              <img
+                src={CEOimage}
+                alt="Zakaul Haque - CEO"
+                className="w-full h-full object-cover"
+                style={{ objectPosition: 'center 20%' }}
+              />
+            </div>
 
             {/* Text */}
             <div>
@@ -107,7 +107,7 @@ export default function AboutSection() {
                 {SKILLS.map((skill) => (
                   <span
                     key={skill}
-                    className="text-[11px] font-medium text-slate-500 bg-gray-50 border border-gray-100 px-2.5 py-1 rounded-full"
+                    className="text-[11px] font-medium text-slate-500 bg-white border border-gray-200 px-2.5 py-1 rounded-full"
                   >
                     {skill}
                   </span>
@@ -119,7 +119,7 @@ export default function AboutSection() {
       </div>
 
       {/* ── PM Award Section ── */}
-      <div className="bg-white py-20 px-6">
+      <div className="px-6 pb-20">
         <div className="max-w-5xl mx-auto">
           <motion.div
             className="bg-blue-50 border border-blue-100 rounded-2xl p-10"
@@ -148,21 +148,11 @@ export default function AboutSection() {
 
               {/* Award Image */}
               <div className="rounded-2xl overflow-hidden h-64">
-                {awardImage ? (
-                  <img
-                    src={awardImage}
-                    alt="PM of India Award"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="bg-white border-2 border-dashed border-blue-200 rounded-2xl h-full flex flex-col items-center justify-center text-center px-6">
-                    <svg className="w-10 h-10 text-blue-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                    </svg>
-                    <p className="text-sm font-semibold text-blue-400">Award Photo</p>
-                    <p className="text-xs text-blue-300 mt-1">Upload award image here</p>
-                  </div>
-                )}
+                <img
+                  src={awardImage}
+                  alt="PM of India Award"
+                  className="w-full h-full object-cover"
+                />
               </div>
 
             </div>
@@ -171,7 +161,7 @@ export default function AboutSection() {
       </div>
 
       {/* ── Why Clients Love Us ── */}
-      <div className="bg-[#F9FAFB] py-20 px-6">
+      <div className="px-6 pb-20">
         <div className="max-w-5xl mx-auto">
           <motion.div
             className="text-center mb-14"
@@ -204,7 +194,7 @@ export default function AboutSection() {
                 key={title}
                 variants={itemVariants}
                 whileHover={{ y: -4 }}
-                className="bg-white border border-gray-100 rounded-2xl p-6"
+                className="bg-gray-50 border border-gray-100 rounded-2xl p-6"
               >
                 <span className="text-2xl mb-3 block">{icon}</span>
                 <p className="text-sm font-extrabold text-[#0f172a] mb-1">{title}</p>
@@ -216,7 +206,7 @@ export default function AboutSection() {
       </div>
 
       {/* ── How We Work ── */}
-      <div className="bg-white py-20 px-6">
+      <div className="px-6 pb-24">
         <div className="max-w-5xl mx-auto text-center">
           <motion.h2
             className="text-3xl md:text-4xl font-extrabold text-[#0f172a] tracking-tight mb-14"
