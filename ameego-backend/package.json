@@ -1,0 +1,1 @@
+{\n  "name": "ameego-backend",\n  "version": "1.0.0",\n  "description": "A backend for the Ameego application",\n  "main": "index.js",\n  "scripts": {\n    "test": "echo 'Error: no test specified' && exit 1"\n  },\n  "dependencies": {\n    "express": "latest"\n  },\n  "author": "AdwaitDeshmukh",\n  "license": "ISC"\n}
