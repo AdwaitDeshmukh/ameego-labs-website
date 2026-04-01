@@ -1,6 +1,6 @@
 import Groq from 'groq-sdk';
 import dotenv from 'dotenv';
-
+//testing
 dotenv.config();
 
 const groqClient = new Groq({
