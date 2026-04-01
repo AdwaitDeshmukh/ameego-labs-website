@@ -53,8 +53,8 @@ function Home() {
       <div id='serviceStart'></div>
       <ServicesSection />
       <ProductsSection />
-      <ContactSection />
       <AboutSection />
+      <ContactSection />
       <ScrollToTop />
     </>
   );
