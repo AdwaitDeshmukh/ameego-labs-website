@@ -8,7 +8,7 @@ console.log('GROQ_API_KEY exists:', process.env.GROQ_API_KEY ? '✅ YES' : '❌ 
 
 import express from 'express';
 import cors from 'cors';
-import chatRoutes from './routes/chatRoutes.js';
+import aiRoutes from './routes/ai.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -19,12 +19,10 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/api/chat', chatRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Chatbot backend is running' });
-});
+app.get('/api/ai', aiRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
