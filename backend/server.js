@@ -1,7 +1,10 @@
 import dotenv from 'dotenv';
+import connectDB from "./config/db.js";
 
 // LOAD .env FIRST - BEFORE any other imports
 dotenv.config();
+
+connectDB();
 
 console.log('🔍 Checking API Key...');
 console.log('GROQ_API_KEY exists:', process.env.GROQ_API_KEY ? '✅ YES' : '❌ NO');
@@ -20,9 +23,6 @@ app.use(express.json());
 
 // Routes
 app.use('/api/ai', aiRoutes);
-
-// Health check
-app.get('/api/ai', aiRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

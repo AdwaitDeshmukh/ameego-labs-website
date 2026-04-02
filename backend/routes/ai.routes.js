@@ -1,6 +1,6 @@
 import express from 'express';
 import { handleChat, healthCheck } from '../controllers/chatController.js';
-import { questionWizard } from '../controllers/questionWizard.js';
+import { questionWizard, start, answer, complete, discussMessage, discussStart, generateCRDController } from '../controllers/questionWizard.js';
 
 const router = express.Router();
 
@@ -11,7 +11,12 @@ router.post('/chatbot', handleChat);
 router.get('/health', healthCheck);
 
 //Question Wizard Routes
-router.post('/question-wizard', questionWizard)
-
+router.post('/wizard', questionWizard)
+router.get("/wizard/start", start);
+router.post("/wizard/answer", answer);
+router.post("/wizard/complete", complete);
+router.post("/wizard/discuss/start", discussStart);
+router.post("/wizard/discuss/message", discussMessage);
+router.post("/wizard/generate-crd", generateCRDController);
 
 export default router;
