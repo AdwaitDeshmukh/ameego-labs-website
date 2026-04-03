@@ -16,6 +16,11 @@ const discussionSessionSchema = new mongoose.Schema({
         }
     ],
 
+    summary: {
+        type: String,
+        default: ""
+    },
+
     // optional but recommended
     createdAt: {
         type: Date,

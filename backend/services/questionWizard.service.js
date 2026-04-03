@@ -5,7 +5,6 @@ import WizardSession from "../models/wizardSession.model.js";
 import DiscussionSession from "../models/discussionSession.model.js";
 
 const MODEL = 'groq/compound-mini';
-const MAX_TOKENS = 100;
 const TEMPERATURE = 0.5;
 
 // FOCUSED CHATBOT INSTRUCTION
@@ -23,16 +22,124 @@ Always stay focused on Ameego Labs services.
 Be clear, professional, and helpful.
 `;
 
-export async function sendMessage(messages) {
+const SUMMARY_INSTRUCTION = `
+You maintain a concise list of confirmed user requirements.
+
+RULES:
+- Only include confirmed features or requirements
+- Ignore questions, doubts, explanations
+- Keep it short and clean
+- Use bullet points
+
+OUTPUT FORMAT:
+- Feature 1
+- Feature 2
+`;
+
+const CRD_INSTRUCTION = `
+You are a senior business analyst.
+
+Convert user inputs into a structured, implementation-ready Client Requirement Document (CRD).
+
+RULES:
+- Extract explicit and implicit requirements
+- Remove ambiguity
+- Make only reasonable assumptions
+- Do NOT hallucinate features
+- Be concise and clear
+
+OUTPUT:
+- Return STRICT valid JSON only
+- No explanations, no markdown
+- No extra fields
+
+Follow the predefined CRD schema strictly.
+`;
+
+const DISCUSSION_INSTRUCTION = `
+You are an AI consultant for Ameego Labs.
+
+You are in DISCUSSION MODE.
+
+Your role:
+- Help refine the user's project requirements step-by-step
+- Suggest improvements or additional features
+- Keep responses short, clear, and conversational
+- Ask follow-up questions to guide the user
+
+STRICT RULES:
+- Do NOT generate long reports
+- Do NOT use tables or structured formatting
+- Do NOT repeat full recommendations again
+- Keep responses under 4–6 lines
+- Focus on one idea at a time
+
+STYLE:
+- Friendly and professional
+- Interactive (like a real consultant)
+- Encourage clarification
+
+EXAMPLE BEHAVIOR:
+User: "I want analytics dashboard"
+
+Response:
+"That’s a great addition.
+
+You can include user activity tracking and performance insights.
+
+Do you want this dashboard for admin only or for users as well?"
+`;
+
+const RECOMMENDATION_INSTRUCTION = `
+You are an expert AI consultant for Ameego Labs.
+
+Your task:
+- Analyze user requirements from a questionnaire
+- Recommend the most suitable services offered by Ameego Labs
+- Provide clear reasoning
+
+STRICT RULES:
+- Only recommend services relevant to Ameego Labs
+- Do NOT mention proposals or documents
+- Do NOT ask questions
+- Do NOT generate long explanations
+- Keep reasoning concise and professional
+
+OUTPUT FORMAT (STRICT JSON ONLY):
+
+{
+  "services": [],
+  "reasoning": "",
+  "ui_sections": {
+    "title": "Recommended Solution",
+    "description": "",
+    "highlights": []
+  }
+}
+
+GUIDELINES:
+- "services" → list of relevant services
+- "reasoning" → 3–5 lines max
+- "description" → short summary of solution
+- "highlights" → key features/benefits
+
+Do NOT return anything outside JSON.
+`;
+
+export async function sendMessage(messages, instruction) {
     try {
         const messagesWithContext = [
-            { role: 'system', content: SYSTEM_INSTRUCTION },
+            {
+                role: 'system',
+                content: instruction || SYSTEM_INSTRUCTION
+            },
             ...messages
         ];
+
         const response = await groqClient.chat.completions.create({
             model: MODEL,
             messages: messagesWithContext,
-            max_tokens: MAX_TOKENS,
+            max_tokens: instruction?.includes("Client Requirement Document") ? 800 : 300,
             temperature: TEMPERATURE,
         });
 
@@ -202,84 +309,58 @@ export const completeWizard = async (sessionId) => {
         .join("\n");
 
     const userPrompt = `
-User has provided the following requirements:
+        User requirements:
 
-${formattedAnswers}
+        ${formattedAnswers}
 
-Tasks:
-1. Recommend the best Ameego Labs services
-2. Explain why those services are suitable
-3. Don't mention proposal related things if required add information for Client Requirement Document
-`;
+        Respond ONLY in JSON format.
+    `;
 
     // 🔥 STEP 4: Call Groq
     const aiResponse = await sendMessage([
         { role: "user", content: userPrompt }
-    ]);
+    ], RECOMMENDATION_INSTRUCTION);
+
+    let parsed;
+
+    try {
+        parsed = JSON.parse(aiResponse);
+    } catch {
+        parsed = { raw: aiResponse };
+    }
 
     // 🔥 STEP 5: Return AI response
     return {
         answers: enrichedAnswers,
-        aiResponse
+        aiResponse: parsed
     };
 };
 
-export const startDiscussion = async (sessionId) => {
-    // 🔥 Get latest wizard session
-    const session = await WizardSession.findOne({ sessionId });
-
-    if (!session) {
-        throw new Error("Session not found");
+export const startDiscussion = async (sessionId, initialAIResponse) => {
+    if (!initialAIResponse) {
+        throw new Error("Initial AI response required");
     }
 
-    // 🔥 Rebuild enriched answers (same as completeWizard)
-    const enrichedAnswers = [];
+    const formatted = `
+        Recommended Services:
+        ${initialAIResponse.services.join(", ")}
 
-    for (const item of session.answers) {
-        const question = await Question.findOne({
-            questionId: item.questionId
-        });
+        Reason:
+        ${initialAIResponse.reasoning}
+    `;
 
-        enrichedAnswers.push({
-            question: question.text,
-            answer: item.answer
-        });
-    }
 
-    // 🔥 Build prompt again (same logic)
-    const formattedAnswers = enrichedAnswers
-        .map((q, i) => `${i + 1}. ${q.question} → ${q.answer}`)
-        .join("\n");
-
-    const userPrompt = `
-User has provided the following requirements:
-
-${formattedAnswers}
-
-Tasks:
-1. Recommend the best Ameego Labs services
-2. Explain why those services are suitable
-`;
-
-    const aiResponse = await sendMessage([
-        { role: "user", content: userPrompt }
-    ]);
-
-    // 🔥 Create discussion session
     const discussion = await DiscussionSession.create({
         sessionId,
         messages: [
             {
                 role: "assistant",
-                content: aiResponse
+                content: formatted
             }
         ]
     });
 
-    return {
-        aiResponse,
-        discussion
-    };
+    return discussion;
 };
 
 export const sendDiscussionMessage = async (sessionId, userMessage) => {
@@ -295,18 +376,22 @@ export const sendDiscussionMessage = async (sessionId, userMessage) => {
         content: userMessage
     });
 
-    // 🔥 Limit messages (prevent overflow)
+    // 🔥 Limit messages
     if (discussion.messages.length > 20) {
         discussion.messages.shift();
     }
 
-    // ✅ Send full conversation to Groq
+    // ✅ Clean messages
     const cleanMessages = discussion.messages.map(msg => ({
         role: msg.role,
         content: msg.content
     }));
 
-    const aiResponse = await sendMessage(cleanMessages);
+    // 🔥 Use discussion-specific AI behavior
+    const aiResponse = await sendMessage(
+        cleanMessages,
+        DISCUSSION_INSTRUCTION
+    );
 
     // ✅ Save AI response
     discussion.messages.push({
@@ -314,6 +399,39 @@ export const sendDiscussionMessage = async (sessionId, userMessage) => {
         content: aiResponse
     });
 
+    // 🔥 STEP: Incremental summary update
+
+    const summaryPrompt = `
+        You are updating a project requirement summary.
+
+        CURRENT SUMMARY:
+        ${discussion.summary || "No summary yet."}
+
+        NEW USER MESSAGE:
+        ${userMessage}
+
+        TASK:
+        Update the summary by including only relevant project requirements.
+
+        IMPORTANT:
+        - Only include confirmed features or requirements
+        - Ignore questions, doubts, explanations
+        - Keep it concise
+        - Use bullet points
+
+        OUTPUT FORMAT:
+        - Feature 1
+        - Feature 2
+    `;
+
+    if (isRequirementMessage(userMessage)) {
+        const updatedSummary = await sendMessage(
+            [{ role: "user", content: summaryPrompt }],
+            SUMMARY_INSTRUCTION
+        );
+
+        discussion.summary = updatedSummary;
+    }
     await discussion.save();
 
     return aiResponse;
@@ -347,51 +465,48 @@ export const generateCRD = async (sessionId) => {
         .join("\n");
 
     // 🔹 Format discussion (IMPORTANT)
-    let discussionText = "";
-
-    if (discussion && discussion.messages.length > 0) {
-        const cleanMessages = discussion.messages.map(msg => ({
-            role: msg.role,
-            content: msg.content
-        }));
-
-        discussionText = cleanMessages
-            .map(m => `${m.role.toUpperCase()}: ${m.content}`)
-            .join("\n");
-    }
+    const discussionText = discussion?.summary
+        ? discussion.summary
+        : "No additional discussion provided.";
 
     // 🔥 FINAL PROMPT
     const crdPrompt = `
-You are a professional business analyst.
+        INPUT:
 
-Remember: 
-- Use Rupees sign while express money
+        1. Questionnaire Answers:
+        ${formattedAnswers}
 
-Based on the following:
+        2. Additional Discussion:
+        ${discussionText || "No additional discussion provided."}
 
-1. User questionnaire answers:
-${formattedAnswers}
+        ---
 
-2. Additional discussion:
-${discussionText}
+        Generate CRD using this JSON structure:
 
-Generate a Client Requirement Document (CRD) in STRICT JSON format:
-
-{
-  "project_overview": "",
-  "goals_objectives": "",
-  "features_required": [],
-  "technical_preferences": "",
-  "timeline": "",
-  "budget": "",
-  "additional_notes": ""
-}
-  Respond ONLY in valid JSON. No explanation. No extra text.
+        {
+        "project_overview": "",
+        "goals_objectives": "",
+        "features_required": [],
+        "functional_requirements": {
+            "authentication": "",
+            "core_features": [],
+            "admin_features": []
+        },
+        "technical_preferences": "",
+        "non_functional_requirements": {
+            "performance": "",
+            "security": "",
+            "scalability": ""
+        },
+        "timeline": "",
+        "budget": "",
+        "additional_notes": ""
+        }
 `;
 
     const aiResponse = await sendMessage([
         { role: "user", content: crdPrompt }
-    ]);
+    ], CRD_INSTRUCTION);
 
     // 🔥 Parse JSON safely
     let parsed;
@@ -402,4 +517,21 @@ Generate a Client Requirement Document (CRD) in STRICT JSON format:
     }
 
     return parsed;
+};
+
+// Helper Functions
+const isRequirementMessage = (text) => {
+    const lower = text.toLowerCase();
+
+    return (
+        !lower.endsWith("?") &&
+        (
+            lower.includes("add") ||
+            lower.includes("want") ||
+            lower.includes("include") ||
+            lower.includes("need") ||
+            lower.includes("feature") ||
+            lower.includes("should have")
+        )
+    );
 };
