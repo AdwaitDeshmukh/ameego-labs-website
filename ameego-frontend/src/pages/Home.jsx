@@ -28,6 +28,7 @@ function Home() {
       <AboutSection />
       <ServicesSection />
       <ProductsSection />
+      <AboutSection />
       <ContactSection />
       <ScrollToTop />
     </>

@@ -19,21 +19,4 @@ router.post("/wizard/discuss/start", discussStart);
 router.post("/wizard/discuss/message", discussMessage);
 router.post("/wizard/generate-crd", generateCRDController);
 
-// TEMPORARY TEST ROUTE - remove after testing
-router.get('/test-email', async (req, res) => {
-    try {
-        const { sendEmail } = await import('../services/emailService.js');
-        
-        await sendEmail({
-            to: 'adwaitdeshmukh1121@gmail.com',  // put your email here
-            subject: 'Test Email ✅',
-            html: '<h1>It works!</h1><p>Nodemailer is set up correctly.</p>'
-        });
-
-        res.json({ success: true, message: 'Test email sent! Check your inbox.' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
 export default router;
