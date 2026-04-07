@@ -29,5 +29,5 @@ app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📝 Chat endpoint: http://localhost:${PORT}/api/chat`);
+  console.log(`📝 Chat endpoint: http://localhost:${PORT}/api/ai/chat`);
 });

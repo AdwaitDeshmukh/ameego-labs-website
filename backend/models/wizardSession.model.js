@@ -18,7 +18,22 @@ const wizardSessionSchema = new mongoose.Schema({
         type: String,
         enum: ["in_progress", "completed"],
         default: "in_progress"
+    },
+    userEmail:{
+        type:String,
+        default:null   
+    },
+    acknowledged:{
+        type:Boolean,
+        default:false
+    },
+    crd:{
+        type:Object,
+        default:null
     }
-}, { timestamps: true });
+}, 
+
+{ timestamps: true }
+);
 
 export default mongoose.model("WizardSession", wizardSessionSchema);
