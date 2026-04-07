@@ -126,6 +126,19 @@ GUIDELINES:
 Do NOT return anything outside JSON.
 `;
 
+const CLASSIFIER_INSTRUCTION = `
+You are an intent classifier.
+
+Your job:
+Determine if the user's message contains a PROJECT REQUIREMENT.
+
+Return ONLY one word:
+YES or NO
+
+YES → if user is mentioning a feature, requirement, or something to include
+NO → if user is asking a question, doubt, or general discussion
+`;
+
 export async function sendMessage(messages, instruction) {
     try {
         const messagesWithContext = [
@@ -424,7 +437,7 @@ export const sendDiscussionMessage = async (sessionId, userMessage) => {
         - Feature 2
     `;
 
-    if (isRequirementMessage(userMessage)) {
+    if (await isRequirementMessage(userMessage)) {
         const updatedSummary = await sendMessage(
             [{ role: "user", content: summaryPrompt }],
             SUMMARY_INSTRUCTION
@@ -520,18 +533,29 @@ export const generateCRD = async (sessionId) => {
 };
 
 // Helper Functions
-const isRequirementMessage = (text) => {
+const isRequirementMessage = async (text) => {
     const lower = text.toLowerCase();
 
-    return (
-        !lower.endsWith("?") &&
-        (
-            lower.includes("add") ||
-            lower.includes("want") ||
-            lower.includes("include") ||
-            lower.includes("need") ||
-            lower.includes("feature") ||
-            lower.includes("should have")
-        )
-    );
+    // 🔹 Step 1: Fast check (cheap + fast)
+    if (
+        lower.includes("add") ||
+        lower.includes("include") ||
+        lower.includes("want") ||
+        lower.includes("need")
+    ) {
+        return true;
+    }
+
+    // 🔹 Step 2: AI fallback (smart)
+    try {
+        const response = await sendMessage(
+            [{ role: "user", content: text }],
+            CLASSIFIER_INSTRUCTION
+        );
+
+        return response.trim().toUpperCase().includes("YES");
+    } catch (err) {
+        console.error("Classifier failed:", err.message);
+        return false; // safe fallback
+    }
 };
