@@ -172,3 +172,107 @@ export const sendFollowUpEmail = async (userEmail, sessionId) => {
         console.error(`Follow-up email failed: ${error.message}`);
     }
 };
+
+export const sendContactUsEmail = async (req, res) => {
+  const { user, email, phone, query } = req.body;
+
+  if (!user || !email || !query) {
+    return res.status(400).json({ success: false, message: "Missing required fields" });
+  }
+
+  try {
+    // Email to the user
+    await sendEmail({
+      to: email,
+      subject: "We received your message – Ameego Labs",
+      html: `...same as before...`,
+    });
+
+    // Internal notification to the company
+    await sendEmail({
+      to: process.env.EMAIL_COMPANY,
+      subject: `New Contact Query from ${user}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head><meta charset="UTF-8" /></head>
+          <body style="margin:0;padding:0;background-color:#f4f4f5;font-family:Arial,sans-serif;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f5;padding:40px 0;">
+              <tr>
+                <td align="center">
+                  <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;">
+
+                    <tr>
+                      <td style="background-color:#0f172a;padding:32px 40px;text-align:center;">
+                        <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:600;">
+                          New Contact Request
+                        </h1>
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td style="padding:40px;">
+                        <p style="margin:0 0 24px;font-size:15px;color:#374151;line-height:1.7;">
+                          You have received a new message via the website contact form.
+                        </p>
+
+                        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                          <tr>
+                            <td style="background-color:#f8fafc;border-left:4px solid #6366f1;border-radius:4px;padding:20px 24px;">
+                              <p style="margin:0 0 12px;font-size:12px;font-weight:600;color:#6366f1;text-transform:uppercase;letter-spacing:1px;">
+                                Sender Details
+                              </p>
+                              <p style="margin:0 0 6px;font-size:14px;color:#374151;">
+                                <strong>Name:</strong> ${user}
+                              </p>
+                              <p style="margin:0 0 6px;font-size:14px;color:#374151;">
+                                <strong>Email:</strong> ${email}
+                              </p>
+                              <p style="margin:0 0 16px;font-size:14px;color:#374151;">
+                                <strong>Phone:</strong> ${phone || "Not provided"}
+                              </p>
+                              <p style="margin:0 0 8px;font-size:12px;font-weight:600;color:#6366f1;text-transform:uppercase;letter-spacing:1px;">
+                                Message
+                              </p>
+                              <p style="margin:0;font-size:15px;color:#374151;line-height:1.7;">
+                                ${query}
+                              </p>
+                            </td>
+                          </tr>
+                        </table>
+
+                        <p style="margin:0;font-size:14px;color:#6b7280;">
+                          Please follow up with the client at your earliest convenience.
+                        </p>
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td style="padding:0 40px;">
+                        <hr style="border:none;border-top:1px solid #e5e7eb;margin:0;" />
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td style="padding:28px 40px;text-align:center;">
+                        <p style="margin:0;font-size:13px;color:#9ca3af;">
+                          © ${new Date().getFullYear()} Ameego Labs. Internal notification.
+                        </p>
+                      </td>
+                    </tr>
+
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+        </html>
+      `,
+    });
+
+    res.status(200).json({ success: true, message: "Email sent successfully" });
+  } catch (error) {
+    console.error(`Something went wrong sending contact email: ${error}`);
+    res.status(500).json({ success: false, message: "Failed to send email" });
+  }
+};

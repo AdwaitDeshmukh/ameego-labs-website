@@ -1,7 +1,8 @@
 import express from 'express';
 import { handleChat, healthCheck } from '../controllers/chatController.js';
 import { questionWizard, start, answer, complete, discussMessage, discussStart, generateCRDController } from '../controllers/questionWizard.js';
-import { sendCRDController, acknowledgeController } from '../controllers/emailController.js';
+import { sendCRDController, acknowledgeController, } from '../controllers/emailController.js';
+import { sendContactUsEmail } from '../services/emailService.js';
 
 const router = express.Router();
 
@@ -17,5 +18,7 @@ router.post("/wizard/discuss/message", discussMessage);
 router.post("/wizard/generate-crd", generateCRDController);
 router.post("/wizard/send-crd", sendCRDController);
 router.get("/wizard/acknowledge/:sessionId", acknowledgeController);
+
+router.post("/contact-us", sendContactUsEmail);
 
 export default router;

@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { motion, useScroll, useTransform, useMotionValue } from "framer-motion";
+import { motion, useScroll, useTransform, useMotionValue, AnimatePresence } from "framer-motion";
 import { CursorFollower } from "@/components/CursorFollower";
 import { MagneticButton } from "@/components/MagneticButton";
 import { RevealOnScroll } from "@/components/RevealOnScroll";
@@ -8,7 +8,7 @@ import { AmeegoChatbot } from "@/components/AmeegoChatbot";
 import {
   Plane, Smile, Palette, Shield, Zap, Headphones, ShoppingCart, ArrowRight,
   Phone, Mail, MapPin, ChevronDown, Lightbulb, ArrowRightIcon, Mic2, Globe,
-  Settings2, ThumbsUp, ExternalLink
+  Settings2, ThumbsUp, ExternalLink, CheckCircle2, X, Loader2,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
@@ -177,7 +177,7 @@ function TiltCard({ children, className = "" }: { children: React.ReactNode; cla
   );
 }
 
-/* ───── Spotlight card (cursor glow) ───── */
+/* ───── Spotlight card ───── */
 function SpotlightCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ x: 0, y: 0 });
@@ -210,7 +210,7 @@ function SpotlightCard({ children, className = "" }: { children: React.ReactNode
   );
 }
 
-/* ───── Nav link with underline ───── */
+/* ───── Nav link ───── */
 function NavItem({ href, label }: { href: string; label: string }) {
   return (
     <a
@@ -223,6 +223,73 @@ function NavItem({ href, label }: { href: string; label: string }) {
   );
 }
 
+/* ───── Success Popup ───── */
+function SuccessPopup({ onClose }: { onClose: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-background/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+        transition={{ type: "spring", stiffness: 260, damping: 22 }}
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-md rounded-2xl border border-border bg-background p-8 shadow-xl text-center"
+      >
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 h-8 w-8 flex items-center justify-center rounded-full border border-border hover:bg-accent transition-colors"
+        >
+          <X className="h-4 w-4 text-muted-foreground" />
+        </button>
+
+        {/* Icon */}
+        <div className="inline-flex h-16 w-16 rounded-full bg-green-100 items-center justify-center mb-5">
+          <CheckCircle2 className="h-8 w-8 text-green-600" />
+        </div>
+
+        {/* Text */}
+        <h3 className="text-xl font-semibold mb-2">Message Sent!</h3>
+        <p className="text-[14px] text-muted-foreground leading-relaxed mb-2">
+          Thanks for reaching out. We've sent a confirmation to your email and will get back to you within 1–2 business days.
+        </p>
+        <p className="text-[13px] text-muted-foreground leading-relaxed mb-6">
+          In the meantime, why not try our{" "}
+          <a
+            href="/wizard"
+            className="text-primary font-semibold hover:underline"
+          >
+            Service Wizard
+          </a>{" "}
+          to get a custom CRD tailored to your project?
+        </p>
+
+        <div className="flex flex-col gap-3">
+          <a
+            href="/wizard"
+            className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-lg bg-foreground text-background text-[13px] font-medium hover:opacity-90 transition-opacity"
+          >
+            Take the Service Wizard
+            <ArrowRight className="h-4 w-4" />
+          </a>
+          <button
+            onClick={onClose}
+            className="text-[13px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 /* ═════════ MAIN LANDING ═════════ */
 const Landing = () => {
   const { theme, setTheme } = useTheme();
@@ -232,13 +299,53 @@ const Landing = () => {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
 
   const [contactForm, setContactForm] = useState({ name: "", phone: "", email: "", query: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const CONTACT_URL = `${import.meta.env.VITE_BACKEND_URL}/api/ai/contact-us`;
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!contactForm.name || !contactForm.email || !contactForm.query) return;
+
+    setSubmitting(true);
+    try {
+      const res = await fetch(CONTACT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user: contactForm.name,
+          email: contactForm.email,
+          phone: contactForm.phone,
+          query: contactForm.query,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setShowSuccess(true);
+        setContactForm({ name: "", phone: "", email: "", query: "" });
+      }
+    } catch (err) {
+      console.error("Contact form error:", err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden cursor-none md:cursor-none">
       <CursorFollower />
 
+      {/* ── SUCCESS POPUP ── */}
+      <AnimatePresence>
+        {showSuccess && <SuccessPopup onClose={() => setShowSuccess(false)} />}
+      </AnimatePresence>
+
       {/* ── NAV ── */}
-      <nav className="fixed top-0 z-50 w-full backdrop-blur-xl bg-background/80 border-b border-border/50">
+      <nav className="fixed top-0 z-40 w-full backdrop-blur-xl bg-background/80 border-b border-border/50">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <a href="#" className="flex items-center gap-3 group" data-cursor-hover>
             <div className="h-8 w-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
@@ -279,14 +386,11 @@ const Landing = () => {
 
       {/* ── HERO ── */}
       <section ref={heroRef} className="relative min-h-[100vh] flex items-center justify-center pt-16 overflow-hidden">
-        {/* Fleeing particles */}
         <FleeingParticles />
-        {/* Animated grid background */}
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{
           backgroundImage: `linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)`,
           backgroundSize: "60px 60px",
         }} />
-        {/* Gradient orbs */}
         <motion.div
           className="absolute top-1/4 -left-32 w-[500px] h-[500px] rounded-full blur-[120px] opacity-20"
           style={{ background: "hsl(var(--primary))" }}
@@ -357,7 +461,6 @@ const Landing = () => {
           </motion.div>
         </motion.div>
 
-        {/* Scroll indicator */}
         <motion.div
           className="absolute bottom-8 left-1/2 -translate-x-1/2"
           animate={{ y: [0, 8, 0] }}
@@ -521,7 +624,7 @@ const Landing = () => {
                 Built on trust &<br />delivered with excellence
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {WHY_US.map((item, i) => (
+                {WHY_US.map((item) => (
                   <motion.div
                     key={item}
                     className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-background"
@@ -626,14 +729,18 @@ const Landing = () => {
             <RevealOnScroll direction="right">
               <div className="rounded-xl border border-border bg-background p-8">
                 <h3 className="text-lg font-semibold mb-6">Send us a message</h3>
-                <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+                <form className="space-y-4" onSubmit={handleContactSubmit}>
                   <div>
-                    <label className="text-[12px] text-muted-foreground mb-1.5 block">Name</label>
+                    <label className="text-[12px] text-muted-foreground mb-1.5 block">
+                      Name <span className="text-red-400">*</span>
+                    </label>
                     <input
                       type="text"
+                      required
                       value={contactForm.name}
                       onChange={(e) => setContactForm(f => ({ ...f, name: e.target.value }))}
-                      className="w-full h-10 px-3 rounded-lg border border-border bg-card text-[13px] focus:outline-none focus:ring-1 focus:ring-primary/50 transition-shadow"
+                      disabled={submitting}
+                      className="w-full h-10 px-3 rounded-lg border border-border bg-card text-[13px] focus:outline-none focus:ring-1 focus:ring-primary/50 transition-shadow disabled:opacity-50"
                       placeholder="Your name"
                     />
                   </div>
@@ -644,38 +751,55 @@ const Landing = () => {
                         type="tel"
                         value={contactForm.phone}
                         onChange={(e) => setContactForm(f => ({ ...f, phone: e.target.value }))}
-                        className="w-full h-10 px-3 rounded-lg border border-border bg-card text-[13px] focus:outline-none focus:ring-1 focus:ring-primary/50 transition-shadow"
+                        disabled={submitting}
+                        className="w-full h-10 px-3 rounded-lg border border-border bg-card text-[13px] focus:outline-none focus:ring-1 focus:ring-primary/50 transition-shadow disabled:opacity-50"
                         placeholder="Contact number"
                       />
                     </div>
                     <div>
-                      <label className="text-[12px] text-muted-foreground mb-1.5 block">Email</label>
+                      <label className="text-[12px] text-muted-foreground mb-1.5 block">
+                        Email <span className="text-red-400">*</span>
+                      </label>
                       <input
                         type="email"
+                        required
                         value={contactForm.email}
                         onChange={(e) => setContactForm(f => ({ ...f, email: e.target.value }))}
-                        className="w-full h-10 px-3 rounded-lg border border-border bg-card text-[13px] focus:outline-none focus:ring-1 focus:ring-primary/50 transition-shadow"
+                        disabled={submitting}
+                        className="w-full h-10 px-3 rounded-lg border border-border bg-card text-[13px] focus:outline-none focus:ring-1 focus:ring-primary/50 transition-shadow disabled:opacity-50"
                         placeholder="you@example.com"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-[12px] text-muted-foreground mb-1.5 block">Query</label>
+                    <label className="text-[12px] text-muted-foreground mb-1.5 block">
+                      Query <span className="text-red-400">*</span>
+                    </label>
                     <textarea
+                      required
                       value={contactForm.query}
                       onChange={(e) => setContactForm(f => ({ ...f, query: e.target.value }))}
+                      disabled={submitting}
                       rows={4}
-                      className="w-full px-3 py-2.5 rounded-lg border border-border bg-card text-[13px] focus:outline-none focus:ring-1 focus:ring-primary/50 transition-shadow resize-none"
+                      className="w-full px-3 py-2.5 rounded-lg border border-border bg-card text-[13px] focus:outline-none focus:ring-1 focus:ring-primary/50 transition-shadow resize-none disabled:opacity-50"
                       placeholder="Tell us about your project..."
                     />
                   </div>
                   <MagneticButton>
                     <button
                       type="submit"
-                      className="w-full h-11 bg-foreground text-background rounded-lg text-[13px] font-medium hover:opacity-90 transition-opacity"
+                      disabled={submitting}
+                      className="w-full h-11 bg-foreground text-background rounded-lg text-[13px] font-medium hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center justify-center gap-2"
                       data-cursor-hover
                     >
-                      Submit
+                      {submitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Sending…
+                        </>
+                      ) : (
+                        "Submit"
+                      )}
                     </button>
                   </MagneticButton>
                 </form>
@@ -704,7 +828,6 @@ const Landing = () => {
         </div>
       </footer>
 
-      {/* Floating AI Chatbot */}
       <AmeegoChatbot />
     </div>
   );
